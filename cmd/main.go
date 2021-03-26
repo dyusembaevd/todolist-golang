@@ -1,23 +1,24 @@
 package main
 
 import (
-	"log"
-
 	_ "github.com/lib/pq"
 	"github.com/mohito22/todo-app-golang"
 	"github.com/mohito22/todo-app-golang/pkg/handler"
 	"github.com/mohito22/todo-app-golang/pkg/repository"
 	"github.com/mohito22/todo-app-golang/pkg/service"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 func main() {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+
 	if err := initConfig(); err != nil {
-		log.Fatalf("error while initializing config: %s", err)
+		logrus.Fatalf("error while initializing config: %s", err)
 	}
 
 	db, err := repository.NewPostgressDB(repository.Config{
-		Host:     viper.GetString("db.host"),
+		Host:     "localhost",
 		Port:     viper.GetString("db.port"),
 		Username: viper.GetString("db.username"),
 		Password: viper.GetString("db.password"),
@@ -26,7 +27,7 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatalf("error while connecting to DB: %s", err)
+		logrus.Fatalf("error while connecting to DB: %s", err)
 	}
 
 	repos := repository.NewRepository(db)
@@ -35,7 +36,7 @@ func main() {
 
 	srv := new(todo.Server)
 	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
-		log.Fatalf("Error while running http server: %s", err)
+		logrus.Fatalf("Error while running http server: %s", err)
 	}
 }
 
